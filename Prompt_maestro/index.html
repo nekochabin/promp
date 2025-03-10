@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prompt Maestro</title>
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Firebase CDN -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-analytics.js";
+        // TODO: Add SDKs for Firebase products that you want to use
+        // https://firebase.google.com/docs/web/setup#available-libraries
+      
+        // Your web app's Firebase configuration
+        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+        const firebaseConfig = {
+          apiKey: "AIzaSyDkF0vwFUIskRNckvu5yJx1-cG90bSkR6s",
+          authDomain: "prompt-maestro.firebaseapp.com",
+          projectId: "prompt-maestro",
+          storageBucket: "prompt-maestro.firebasestorage.app",
+          messagingSenderId: "407736755767",
+          appId: "1:407736755767:web:ed58e7adfaf961cb7441b2",
+          measurementId: "G-X1S43WJ9TE"
+        };
+      
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+      </script>
+</head>
+<body>
+    <header class="app-header">
+        <div class="logo">
+            <h1>Prompt Maestro</h1>
+        </div>
+        <nav class="main-nav">
+            <ul>
+                <li><a href="#" class="nav-link" data-page="dashboard">ダッシュボード</a></li>
+                <li><a href="#" class="nav-link" data-page="templates">テンプレート</a></li>
+                <li><a href="#" class="nav-link" data-page="api-settings">API設定</a></li>
+            </ul>
+        </nav>
+        <div class="user-area">
+            <div id="user-info" class="hidden">
+                <span id="user-name"></span>
+                <button id="logout-btn">ログアウト</button>
+            </div>
+            <div id="login-area">
+                <button id="login-btn">ログイン</button>
+                <button id="signup-btn">新規登録</button>
+            </div>
+        </div>
+    </header>
+
+    <main id="app-container">
+        <!-- ログイン/登録ページ -->
+        <section id="auth-page" class="app-page">
+            <div class="auth-container">
+                <div id="login-form" class="auth-form">
+                    <h2>ログイン</h2>
+                    <form id="login-form-element">
+                        <div class="form-group">
+                            <label for="login-email">メールアドレス</label>
+                            <input type="email" id="login-email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="login-password">パスワード</label>
+                            <input type="password" id="login-password" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">ログイン</button>
+                    </form>
+                    <p>アカウントをお持ちでない方は <a href="#" id="show-signup">新規登録</a></p>
+                </div>
+                
+                <div id="signup-form" class="auth-form hidden">
+                    <h2>アカウント作成</h2>
+                    <form id="signup-form-element">
+                        <div class="form-group">
+                            <label for="signup-name">名前</label>
+                            <input type="text" id="signup-name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="signup-email">メールアドレス</label>
+                            <input type="email" id="signup-email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="signup-password">パスワード</label>
+                            <input type="password" id="signup-password" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">登録</button>
+                    </form>
+                    <p>すでにアカウントをお持ちの方は <a href="#" id="show-login">ログイン</a></p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ダッシュボードページ -->
+        <section id="dashboard-page" class="app-page hidden">
+            <h2>ダッシュボード</h2>
+            <div class="dashboard-container">
+                <div class="dashboard-card">
+                    <h3>最近使用したテンプレート</h3>
+                    <ul id="recent-templates" class="template-list">
+                        <!-- テンプレートがここに動的に追加されます -->
+                    </ul>
+                </div>
+                <div class="dashboard-card">
+                    <h3>使用状況</h3>
+                    <div id="usage-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">使用回数</span>
+                            <span id="usage-count" class="stat-value">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">保存済みテンプレート</span>
+                            <span id="template-count" class="stat-value">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- テンプレートページ -->
+        <section id="templates-page" class="app-page hidden">
+            <h2>テンプレート</h2>
+            <div class="templates-controls">
+                <div class="search-bar">
+                    <input type="text" id="template-search" placeholder="テンプレートを検索...">
+                </div>
+                <div class="category-filter">
+                    <select id="category-select">
+                        <option value="all">すべてのカテゴリ</option>
+                        <option value="general">一般</option>
+                        <option value="business">ビジネス</option>
+                        <option value="creative">クリエイティブ</option>
+                        <option value="technical">技術</option>
+                    </select>
+                </div>
+                <button id="new-template-btn" class="btn btn-primary">新規テンプレート</button>
+            </div>
+            
+            <div class="templates-container">
+                <div id="templates-list" class="templates-grid">
+                    <!-- テンプレートがここに動的に追加されます -->
+                </div>
+            </div>
+            
+            <!-- テンプレート編集モーダル -->
+            <div id="template-modal" class="modal hidden">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 id="modal-title">テンプレート編集</h3>
+                        <button id="close-modal" class="close-btn">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="template-form">
+                            <div class="form-group">
+                                <label for="template-name">テンプレート名</label>
+                                <input type="text" id="template-name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="template-category">カテゴリ</label>
+                                <select id="template-category">
+                                    <option value="general">一般</option>
+                                    <option value="business">ビジネス</option>
+                                    <option value="creative">クリエイティブ</option>
+                                    <option value="technical">技術</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="template-content">プロンプト内容</label>
+                                <textarea id="template-content" rows="10" required></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="template-description">説明</label>
+                                <textarea id="template-description" rows="3"></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">保存</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- API設定ページ -->
+        <section id="api-settings-page" class="app-page hidden">
+            <h2>API設定</h2>
+            <div class="api-settings-container">
+                <div class="api-provider">
+                    <h3>OpenAI</h3>
+                    <form id="openai-api-form">
+                        <div class="form-group">
+                            <label for="openai-api-key">APIキー</label>
+                            <input type="password" id="openai-api-key">
+                        </div>
+                        <div class="form-group">
+                            <label for="openai-model">モデル</label>
+                            <select id="openai-model">
+                                <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                                <option value="gpt-4">GPT-4</option>
+                                <option value="gpt-4o">GPT-4o</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">保存</button>
+                    </form>
+                </div>
+                
+                <div class="api-provider disabled">
+                    <h3>Anthropic (Coming Soon)</h3>
+                    <p>Anthropic APIは近日対応予定です。</p>
+                </div>
+                
+                <div class="api-provider disabled">
+                    <h3>Google AI (Coming Soon)</h3>
+                    <p>Google AI APIは近日対応予定です。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- テンプレート実行ページ -->
+        <section id="run-template-page" class="app-page hidden">
+            <h2 id="run-template-title">テンプレート実行</h2>
+            <div class="run-template-container">
+                <div class="prompt-section">
+                    <h3>プロンプト</h3>
+                    <div id="prompt-preview" class="prompt-preview"></div>
+                    <div class="form-group">
+                        <label for="prompt-variables">変数入力</label>
+                        <div id="variables-form">
+                            <!-- 変数入力フォームがここに動的に追加されます -->
+                        </div>
+                    </div>
+                    <button id="run-prompt-btn" class="btn btn-primary">実行</button>
+                </div>
+                <div class="response-section">
+                    <h3>AI応答</h3>
+                    <div id="ai-response" class="ai-response">
+                        <p class="placeholder">AIの応答がここに表示されます</p>
+                    </div>
+                    <div class="response-actions">
+                        <button id="copy-response-btn" class="btn btn-secondary">コピー</button>
+                        <button id="save-response-btn" class="btn btn-secondary">保存</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="app-footer">
+        <p>&copy; 2025 Prompt Maestro</p>
+    </footer>
+
+    <!-- JavaScriptファイルの読み込み -->
+    <script src="js/auth.js"></script>
+    <script src="js/templates.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
